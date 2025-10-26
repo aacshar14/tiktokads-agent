@@ -1,0 +1,271 @@
+{
+  "name": "TikTok Ads - Complete Campaign Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "brand",
+              "value": "Chiltepik"
+            },
+            {
+              "name": "objective",
+              "value": "TRAFFIC"
+            },
+            {
+              "name": "locations",
+              "value": "Piedras Negras, MX | Eagle Pass, US"
+            },
+            {
+              "name": "daily_budget_mxn",
+              "value": 250
+            },
+            {
+              "name": "age_range",
+              "value": "18-44"
+            },
+            {
+              "name": "gender",
+              "value": "ALL"
+            },
+            {
+              "name": "language",
+              "value": "es,*"
+            }
+          ]
+        }
+      },
+      "id": "manual-trigger",
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name FROM brands WHERE name = '{{ $json.brand }}' LIMIT 1;"
+      },
+      "id": "get-brand-id",
+      "name": "Get Brand ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "credentials": {
+        "postgres": {
+          "id": "Cloud SQL PostgreSQL",
+          "name": "Cloud SQL PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "chat",
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a Media Buyer senior specialized in TikTok Ads for local businesses on the MX/US border."
+            },
+            {
+              "role": "user",
+              "content": "Eres un Media Buyer senior especializado en TikTok Ads para negocios locales en frontera MX/US.\nGenera 1 campaña con 2 ad groups y 3 anuncios, SOLO para las ubicaciones indicadas.\nDevuelve JSON estricto con este esquema:\n\n{\n  \"campaign\": {\n    \"name\": \"...\",\n    \"objective\": \"...\",\n    \"daily_budget_mxn\": 0,\n    \"locations\": \"Piedras Negras, MX | Eagle Pass, US\",\n    \"languages\": \"es,*\",\n    \"age_range\": \"18-44\",\n    \"gender\": \"ALL\",\n    \"optimization\": \"CPC\",\n    \"bidding\": \"AUTO\"\n  },\n  \"ad_groups\": [\n    {\n      \"name\": \"...\",\n      \"interests\": [\"...\", \"...\"],\n      \"behaviors\": [\"...\"],\n      \"hashtags\": [\"#...\", \"#...\"],\n      \"placements\": \"AUTO\",\n      \"connection\": \"ANY\",\n      \"ads\": [\n        {\"name\":\"...\", \"primary_text\":\"...\", \"cta\":\"...\", \"duration_sec\":12}\n      ]\n    }\n  ]\n}\n\nMarca: {{$json.brand}}\nProducto/estilo: (Chiltepik=mariscos premium; ChocoBites=galletas)\nObjetivo: {{$json.objective}}\nUbicaciones: {{$json.locations}}\nPresupuesto: {{$json.daily_budget_mxn}} MXN/día\nIdioma: {{$json.language}}  Edad: {{$json.age_range}}  Género: {{$json.gender}}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "openai-generate",
+      "name": "Generate with OpenAI",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get OpenAI response\nconst aiItem = items[0].json;\nconst brandItem = items[1].json;\nconst inputItem = items[2].json;\n\n// Extract OpenAI message content\nlet aiResponse;\nif (aiItem.message && aiItem.message.content) {\n  try {\n    aiResponse = JSON.parse(aiItem.message.content);\n  } catch (e) {\n    // If content is already an object\n    aiResponse = aiItem.message.content;\n  }\n} else if (aiItem.choices && aiItem.choices[0]) {\n  aiResponse = JSON.parse(aiItem.choices[0].message.content);\n} else {\n  throw new Error('Unexpected OpenAI response format');\n}\n\n// Get brand ID\nconst brandId = brandItem.id || brandItem[0]?.id || (brandItem.name ? brandItem.name : 'Chiltepik');\nconst brandName = inputItem.brand || 'Chiltepik';\n\n// Structure the data\nconst result = {\n  brandId: brandId,\n  brandName: brandName,\n  campaign: aiResponse.campaign,\n  adGroups: aiResponse.ad_groups,\n  inputData: inputItem\n};\n\nreturn [{ json: result }];"
+      },
+      "id": "process-data",
+      "name": "Process Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO campaigns (brand_id, name, objective, daily_budget, locations, languages, age_range, gender, optimization, bidding, status)\nVALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\nRETURNING id;",
+        "additionalFields": {
+          "queryReplacement": "allFields"
+        }
+      },
+      "id": "save-campaign",
+      "name": "Save Campaign",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1120, 300],
+      "credentials": {
+        "postgres": {
+          "id": "Cloud SQL PostgreSQL",
+          "name": "Cloud SQL PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO ad_groups (campaign_id, name, interests, behaviors, hashtags, placements, connection)\nVALUES ($1, $2, $3, $4, $5, $6, $7)\nRETURNING id;"
+      },
+      "id": "save-ad-groups",
+      "name": "Save Ad Groups",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1340, 300],
+      "credentials": {
+        "postgres": {
+          "id": "Cloud SQL PostgreSQL",
+          "name": "Cloud SQL PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log the generation to database\nconst items = $input.all();\nconst firstItem = items[0].json;\n\nreturn [{\n  json: {\n    brandId: firstItem.brandId,\n    inputPayload: JSON.stringify(firstItem.inputData),\n    outputPayload: JSON.stringify({\n      campaign: firstItem.campaign,\n      adGroups: firstItem.adGroups\n    })\n  }\n}];"
+      },
+      "id": "prepare-log",
+      "name": "Prepare Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO generations (brand_id, input_payload, output_payload)\nVALUES ($1, $2::jsonb, $3::jsonb);"
+      },
+      "id": "log-generation",
+      "name": "Log Generation",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1780, 300],
+      "credentials": {
+        "postgres": {
+          "id": "Cloud SQL PostgreSQL",
+          "name": "Cloud SQL PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final output\nreturn $input.all().map(item => ({\n  json: {\n    success: true,\n    message: 'TikTok Ads campaign generated and saved successfully!',\n    brand: item.json.brandName,\n    campaign: item.json.campaign\n  }\n}));"
+      },
+      "id": "return-result",
+      "name": "Return Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [2000, 300]
+    }
+  ],
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "Get Brand ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Brand ID": {
+      "main": [
+        [
+          {
+            "node": "Generate with OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate with OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Process Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Data": {
+      "main": [
+        [
+          {
+            "node": "Save Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Campaign": {
+      "main": [
+        [
+          {
+            "node": "Save Ad Groups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Ad Groups": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Log": {
+      "main": [
+        [
+          {
+            "node": "Log Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Generation": {
+      "main": [
+        [
+          {
+            "node": "Return Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0
+}
+

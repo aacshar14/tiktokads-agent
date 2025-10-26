@@ -1,0 +1,10 @@
+const input = items[0].json; // respuesta del modelo
+const brandName = $json.brand || 'Chiltepik';
+
+return [{
+  json: {
+    brand: brandName,
+    campaign: input.campaign,
+    ad_groups: input.ad_groups
+  }
+}];

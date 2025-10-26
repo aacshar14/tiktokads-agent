@@ -1,0 +1,297 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "40d95e58-1e44-4827-a3a2-48c85c318e65",
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name FROM brands WHERE name = '{{ $json.brand }}' LIMIT 1;",
+        "options": {}
+      },
+      "id": "03ccdffa-ff46-48ae-bfcd-3fec34d77b4c",
+      "name": "Get Brand ID",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -224
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DgapWprXhXGmXRc1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "chat",
+        "requestOptions": {}
+      },
+      "id": "10afdeb8-4e2e-45e8-8cee-8aa749b398fb",
+      "name": "Generate with OpenAI",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "rEeljXZUbLsUttr6",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simplified version that handles undefined items\nconst inputs = $input.all();\nconst aiData = inputs[0]?.json || {};\nconst brandData = inputs[1]?.json || {};\nconst inputData = inputs[2]?.json || {};\n\n// Get brand info\nconst brandId = brandData?.id || brandData?.[0]?.id || 1;\nconst brandName = inputData?.brand || brandData?.name || 'Chiltepik';\n\n// Extract OpenAI response\nlet aiResponse = {};\ntry {\n  if (aiData.message?.content) {\n    aiResponse = JSON.parse(aiData.message.content);\n  } else if (aiData.choices?.[0]?.message?.content) {\n    aiResponse = JSON.parse(aiData.choices[0].message.content);\n  } else {\n    aiResponse = aiData;\n  }\n} catch (e) {\n  aiResponse = aiData;\n}\n\n// Return structured data\nreturn [{\n  json: {\n    brandId: brandId,\n    brandName: brandName,\n    campaign: aiResponse.campaign || {},\n    adGroups: aiResponse.ad_groups || [],\n    inputData: inputData\n  }\n}];"
+      },
+      "id": "0e6b545d-d0b1-470d-be54-96f37597de89",
+      "name": "Process Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO campaigns (brand_id, name, objective, daily_budget, locations, languages, age_range, gender, optimization, bidding, status)\nVALUES (1, 'Test Campaign', 'TRAFFIC', 250, 'Piedras Negras', 'es,*', '18-44', 'ALL', 'CPC', 'AUTO', 'DRAFT')\nRETURNING id;",
+        "options": {}
+      },
+      "id": "3a27c0cb-73ca-4bc7-b6e7-07531f1dcfce",
+      "name": "Save Campaign",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -224
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DgapWprXhXGmXRc1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO ad_groups (campaign_id, name, interests, behaviors, hashtags, placements, connection)\nVALUES ($1, $2, $3, $4, $5, $6, $7)\nRETURNING id;",
+        "options": {}
+      },
+      "id": "64024242-c10b-4715-8be3-8765b49d53dc",
+      "name": "Save Ad Groups",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -224
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DgapWprXhXGmXRc1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log the generation to database\nconst items = $input.all();\nconst firstItem = items[0].json;\n\nreturn [{\n  json: {\n    brandId: firstItem.brandId,\n    inputPayload: JSON.stringify(firstItem.inputData),\n    outputPayload: JSON.stringify({\n      campaign: firstItem.campaign,\n      adGroups: firstItem.adGroups\n    })\n  }\n}];"
+      },
+      "id": "f32e0f99-f47f-46a2-9591-739e6dc95b6a",
+      "name": "Prepare Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        976,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO generations (brand_id, input_payload, output_payload)\nVALUES (1, '{\"test\": \"data\"}'::jsonb, '{\"result\": \"ok\"}'::jsonb);",
+        "options": {}
+      },
+      "id": "4fa281de-3635-4bb1-877b-837e0d66bd2b",
+      "name": "Log Generation",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -224
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DgapWprXhXGmXRc1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final output\nreturn $input.all().map(item => ({\n  json: {\n    success: true,\n    message: 'TikTok Ads campaign generated and saved successfully!',\n    brand: item.json.brandName,\n    campaign: item.json.campaign\n  }\n}));"
+      },
+      "id": "dd49c0e7-7fe3-4b11-be76-d8216b68693c",
+      "name": "Return Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "   INSERT INTO ad_groups (campaign_id, name, interests, behaviors, hashtags, placements, connection)\n   SELECT {{ $json.id }}, 'Test Ad Group', 'Food', 'Mobile users', '#mariscos', 'AUTO', 'ANY'\n   RETURNING id;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        528,
+        -224
+      ],
+      "id": "86d05a02-ed66-419d-889e-2bb475fa2a2c",
+      "name": "Save Ads",
+      "credentials": {
+        "postgres": {
+          "id": "DgapWprXhXGmXRc1",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "Get Brand ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Brand ID": {
+      "main": [
+        [
+          {
+            "node": "Generate with OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate with OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Process Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Data": {
+      "main": [
+        [
+          {
+            "node": "Save Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Campaign": {
+      "main": [
+        [
+          {
+            "node": "Save Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Ad Groups": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Log": {
+      "main": [
+        [
+          {
+            "node": "Log Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Generation": {
+      "main": [
+        [
+          {
+            "node": "Return Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Ads": {
+      "main": [
+        [
+          {
+            "node": "Save Ad Groups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Save Ad Groups": [
+      {
+        "name": "First item",
+        "code": 1
+      },
+      {
+        "name": "Second item",
+        "code": 2
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "32871787df6ce421bc7f43d7ddacd8d876aa2ecf18d853ce488fab3220528d8be"
+  }
+}
+

@@ -1,0 +1,10 @@
+{
+    "brand": "Chiltepik",
+    "objective": "TRAFFIC",
+    "locations": ["Piedras Negras, MX", "Eagle Pass, US"],
+    "daily_budget_mxn": 250,
+    "age_range": "18-44",
+    "gender": "ALL",
+    "language": "es,*"
+  }
+  

@@ -1,0 +1,47 @@
+# n8n credentials
+*.json.bak
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+temp/
+
+# n8n workflows (keep master, ignore others)
+workflow_*.json
+!tiktok_ads_master_workflow.json
+
+# Documentation drafts
+*_DRAFT.md
+

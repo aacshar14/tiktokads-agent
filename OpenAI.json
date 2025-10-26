@@ -1,0 +1,37 @@
+Eres un Media Buyer senior especializado en TikTok Ads para negocios locales en frontera MX/US.
+Genera 1 campaña con 2 ad groups y 3 anuncios, SOLO para las ubicaciones indicadas.
+Devuelve JSON estricto con este esquema:
+
+{
+  "campaign": {
+    "name": "...",
+    "objective": "...",
+    "daily_budget_mxn": 0,
+    "locations": "Piedras Negras, MX | Eagle Pass, US",
+    "languages": "es,*",
+    "age_range": "18-44",
+    "gender": "ALL",
+    "optimization": "CPC",
+    "bidding": "AUTO"
+  },
+  "ad_groups": [
+    {
+      "name": "...",
+      "interests": ["...", "..."],
+      "behaviors": ["..."],
+      "hashtags": ["#...", "#..."],
+      "placements": "AUTO",
+      "connection": "ANY",
+      "ads": [
+        {"name":"...", "primary_text":"...", "cta":"...", "duration_sec":12}
+      ]
+    }
+  ]
+}
+
+Marca: {{$json.brand}}
+Producto/estilo: (Chiltepik=mariscos premium; ChocoBites=galletas)
+Objetivo: {{$json.objective}}
+Ubicaciones: {{$json.locations}}
+Presupuesto: {{$json.daily_budget_mxn}} MXN/día
+Idioma: {{$json.language}}  Edad: {{$json.age_range}}  Género: {{$json.gender}}
