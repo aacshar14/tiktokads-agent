@@ -1,218 +1,86 @@
-# TikTok Ads Agent - AI-Powered Campaign Generator
+# TikTok Ads Agent
 
-Automated system for generating TikTok ad campaigns using OpenAI and managing them in PostgreSQL.
-
-## 🎯 Overview
-
-This project provides a complete automation system for:
-- Generating TikTok ad campaigns using AI
-- Managing campaigns, ad groups, and ads in PostgreSQL
-- Tracking AI generation history
-- Content management for multiple brands
-
-## 🏗️ System Architecture
-
-- **Automation Platform:** n8n (Cloud Run on GCP)
-- **Database:** Cloud SQL PostgreSQL
-- **AI Provider:** OpenAI (GPT-4)
-- **Connection:** Private Cloud Run ↔ Cloud SQL link
-
-## 📂 Project Structure
-
-```
-tiktokads/
-├── tiktok_ads_master_workflow.json  # Main working workflow
-├── tiktok_schema_cloudsql.sql      # PostgreSQL database schema
-├── tiktok_agent_schema.sql         # Original SQLite schema
-├── generate.json                   # Campaign input structure
-├── OpenAI.json                     # AI prompt template
-├── snippet _function.json          # Data processing logic
-└── docs/                           # Documentation
-```
+AI-powered TikTok Ads campaign generator built with n8n, OpenAI, and Cloud SQL.
 
 ## 🚀 Quick Start
 
-### 1. Database Setup
+### Generate a Campaign
 
-Run the schema in your PostgreSQL database:
-
-```sql
--- Execute tiktok_schema_cloudsql.sql
+```bash
+curl -X POST https://n8ne01.entrega.space/webhook/ads/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "brand": "ChocoBites",
+    "objective": "MESSAGES",
+    "locations": ["Piedras Negras, MX", "Eagle Pass, US"],
+    "daily_budget_mxn": 200,
+    "age_range": "16-35",
+    "gender": "ALL",
+    "language": "es,*"
+  }'
 ```
 
-This creates 5 tables:
-- `brands` - Brand management
-- `campaigns` - Campaign data
-- `ad_groups` - Targeting groups
-- `ads` - Individual ad creatives
-- `generations` - AI generation logs
+## 📁 Project Structure
 
-### 2. n8n Workflow Setup
+- **Core Files:**
+  - `tiktok_ads_master_workflow.json` - Main n8n workflow
+  - `tiktok_schema_cloudsql.sql` - Database schema
+  - `generate.json` - Input structure
+  - `OpenAI.json` - AI prompts
 
-1. Import `tiktok_ads_master_workflow.json` into n8n
-2. Configure credentials:
-   - PostgreSQL connection to Cloud SQL
-   - OpenAI API key
-3. Test the workflow
+- **Documentation:**
+  - `API_ENDPOINT_SETUP.md` - API reference
+  - `DATABASE_CONNECTION_GUIDE.md` - Database setup
+  - `SECURITY_NOTES.md` - Security best practices
+  - `docs/` - Additional guides
 
-### 3. Generate Your First Campaign
+- **Database:**
+  - `RUN_THIS_SQL.txt` - Quick schema setup
+  - `QUERY_SAVED_CAMPAIGNS.sql` - Sample queries
 
-Use the input structure from `generate.json`:
-```json
-{
-  "brand": "Chiltepik",
-  "objective": "TRAFFIC",
-  "locations": "Piedras Negras, MX | Eagle Pass, US",
-  "daily_budget_mxn": 250,
-  "age_range": "18-44",
-  "gender": "ALL",
-  "language": "es,*"
-}
-```
+## 🏗️ Architecture
+
+- **n8n** - Workflow automation on Cloud Run
+- **OpenAI GPT-4** - Campaign generation
+- **Cloud SQL PostgreSQL** - Data storage
+- **GCP** - Cloud infrastructure
 
 ## 📊 Database Schema
 
-### Brands Table
-Stores brand information and settings.
-
-### Campaigns Table
-Manages campaign details:
-- Objectives (TRAFFIC, CONVERSIONS, etc.)
-- Targeting parameters
-- Budget and scheduling
-- Status tracking
-
-### Ad Groups Table
-Stores targeting groups:
-- Interests and behaviors
-- Hashtags
-- Placements
-- Connection types
-
-### Ads Table
-Individual ad creatives:
-- Primary text
-- CTA buttons
-- Video duration
-- Asset URLs
-
-### Generations Table
-AI generation audit trail:
-- Input payloads
-- Output payloads
-- Timestamps
-
-## 🔧 Configuration
-
-### n8n Credentials
-
-**PostgreSQL:**
-- Host: `/cloudsql/n8n-secstore:us-central1:n8n-hgdb`
-- Database: `n8n`
-- User: `ttuserdb`
-
-**OpenAI:**
-- Model: `gpt-4`
-- Operation: `chat`
-- Temperature: `0.7`
-
-## 📝 Usage
-
-### Generate Campaign
-
-Run the workflow with brand input data to:
-1. Query brand from database
-2. Generate campaign with OpenAI
-3. Save campaign to database
-4. Save ad groups
-5. Save individual ads
-6. Log generation
-
-### Query Campaigns
-
-```sql
-SELECT * FROM campaigns 
-WHERE brand_id = 1 
-ORDER BY created_at DESC;
-```
-
-### View Full Campaign
-
-```sql
-SELECT c.*, b.name as brand_name
-FROM campaigns c
-JOIN brands b ON c.brand_id = b.id
-WHERE c.id = $1;
-```
-
-## 🎨 Features
-
-- ✅ AI-powered campaign generation
-- ✅ Multi-brand support
-- ✅ Complete database management
-- ✅ Generation history tracking
-- ✅ Spanish language support
-- ✅ Custom targeting parameters
-
-## 🔄 Workflow Nodes
-
-1. **Manual Trigger** - Start workflow
-2. **Get Brand ID** - Query database
-3. **Generate with OpenAI** - AI campaign generation
-4. **Process Data** - Structure AI response
-5. **Save Campaign** - Database insert
-6. **Save Ad Groups** - Save targeting groups
-7. **Save Ads** - Save individual ads
-8. **Log Generation** - Audit trail
-9. **Return Result** - Success output
-
-## 📚 Documentation
-
-- `COMPLETE_WORKFLOW_NEXT.md` - How to extend the workflow
-- `WORKFLOW_ADDITIONS.md` - Adding features
-- `NEXT_STEPS_COMPLETE_SYSTEM.md` - Content management
-- `FINAL_CONFIG_SUMMARY.md` - System configuration
+- `brands` - Brand information
+- `campaigns` - Campaign details
+- `ad_groups` - Ad group targeting
+- `ads` - Individual ad content
+- `generations` - Generation history
 
 ## 🔐 Security
 
-- Private Cloud SQL connection
-- SSL/TLS encryption
-- Secure credential management in n8n
+- Use `.env` file for credentials (see `env.example`)
+- Never commit passwords to Git
+- See `SECURITY_NOTES.md` for best practices
 
-## 📈 Status
+## 📚 Documentation
 
-✅ Database schema created
-✅ Workflow executing successfully
-✅ OpenAI integration working
-✅ Database writes confirmed
+- [API Documentation](API_ENDPOINT_SETUP.md)
+- [Database Setup](DATABASE_CONNECTION_GUIDE.md)
+- [Setup Guide](docs/SETUP_GUIDE.md)
+- [Success Summary](WORKFLOW_SUCCESS_SUMMARY.md)
 
-## 🚧 Next Steps
+## ✨ Features
 
-- [ ] Make data flow fully dynamic
-- [ ] Add content management workflows
-- [ ] Implement campaign status management
-- [ ] Add A/B test variation support
-- [ ] Build content library queries
+- ✅ AI-powered campaign generation
+- ✅ Multi-brand support
+- ✅ Database tracking
+- ✅ Webhook API
+- ✅ Cloud-based infrastructure
 
-## 👥 Contributing
+## 🎯 Usage
 
-This is a custom automation project. For improvements:
-1. Update workflow JSON
-2. Test in n8n
-3. Document changes
+1. Import `tiktok_ads_master_workflow.json` into n8n
+2. Activate the workflow
+3. Call via webhook or manual trigger
+4. Query database for results
 
-## 📄 License
+## 📝 License
 
-Internal project for TikTok ad campaign automation.
-
-## 🔗 Links
-
-- n8n: https://n8ne01.entrega.space
-- Database: Cloud SQL PostgreSQL
-- Project: TikTok Ads Agent
-
----
-
-**Last Updated:** October 26, 2025  
-**Version:** 1.0.0  
-**Status:** Production Ready
+MIT
