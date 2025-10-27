@@ -9,7 +9,7 @@ Write-Host "If not, run in another terminal: cloud-sql-proxy n8n-secstore:us-cen
 Write-Host ""
 
 # Connection parameters
-$env:PGPASSWORD = "Hgttads0814!"
+$env:PGPASSWORD = "Hgn8n0814!"
 $host = "127.0.0.1"
 $port = "5432"
 $database = "n8n"
@@ -26,5 +26,5 @@ Write-Host "  Host: $host" -ForegroundColor White
 Write-Host "  Port: $port" -ForegroundColor White
 Write-Host "  Database: $database" -ForegroundColor White
 Write-Host "  User: $user" -ForegroundColor White
-Write-Host "  Password: Hgttads0814!" -ForegroundColor White
+Write-Host "  Password: Hgn8n0814!" -ForegroundColor White
 

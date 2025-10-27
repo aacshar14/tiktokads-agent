@@ -36,12 +36,12 @@ This will start a local proxy on port 5432.
 Open a **new terminal** (keep proxy running) and connect:
 
 ```bash
-psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=Hgttads0814!"
+psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=Hgn8n0814!"
 ```
 
 Or use environment variable:
 ```bash
-export PGPASSWORD="Hgttads0814!"
+export PGPASSWORD="Hgn8n0814!"
 psql -h 127.0.0.1 -p 5432 -U n8n_user -d n8n
 ```
 
@@ -119,8 +119,8 @@ SELECT
    - Host: `127.0.0.1`
    - Port: `5432`
    - Database: `n8n`
-   - Username: `n8n_user`
-   - Password: `Hgttads0814!`
+  - Username: `n8n_user`
+  - Password: `Hgn8n0814!`
 
 ---
 
@@ -148,7 +148,7 @@ cloud-sql-proxy n8n-secstore:us-central1:n8n-hgdb --port 5432 &
 sleep 2
 
 # Connect
-PGPASSWORD="Hgttads0814!" psql -h 127.0.0.1 -p 5432 -U n8n_user -d n8n
+PGPASSWORD="Hgn8n0814!" psql -h 127.0.0.1 -p 5432 -U n8n_user -d n8n
 ```
 
 Make executable and run:
