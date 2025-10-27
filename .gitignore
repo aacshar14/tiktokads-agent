@@ -1,23 +1,26 @@
-# n8n credentials
-*.json.bak
+# Environment variables
+.env
+.env.local
+*.env
+
+# Passwords and secrets
+*password*
+*secret*
 credentials.json
+secrets.json
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-*.egg-info/
-dist/
-build/
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
-# Node
-node_modules/
-npm-debug.log
-package-lock.json
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
@@ -26,22 +29,7 @@ package-lock.json
 *.swo
 *~
 
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Logs
-*.log
-
 # Temporary files
-*.tmp
 temp/
-
-# n8n workflows (keep master, ignore others)
-workflow_*.json
-!tiktok_ads_master_workflow.json
-
-# Documentation drafts
-*_DRAFT.md
-
+tmp/
+*.tmp

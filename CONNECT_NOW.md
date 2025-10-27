@@ -45,7 +45,7 @@ SELECT * FROM brands;
 
 Load all queries from file:
 ```bash
-psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=Hgn8n0814!" -f QUERY_SAVED_CAMPAIGNS.sql
+psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=YOUR_PASSWORD" -f QUERY_SAVED_CAMPAIGNS.sql
 ```
 
 Or copy queries from `QUERY_SAVED_CAMPAIGNS.sql` and paste into psql.
@@ -58,7 +58,7 @@ Or copy queries from `QUERY_SAVED_CAMPAIGNS.sql` and paste into psql.
 - **Port:** 5432
 - **Database:** n8n
 - **User:** n8n_user
-- **Password:** Hgn8n0814!
+- **Password:** YOUR_PASSWORD
 
 Ready to connect! 🚀
 
