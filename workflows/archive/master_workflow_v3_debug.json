@@ -1,0 +1,166 @@
+{
+    "name": "TikTok Ads Master Workflow V3 (Debug)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "ads/generate",
+                "options": {}
+            },
+            "id": "webhook-trigger",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2.1,
+            "position": [
+                0,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT id, name FROM brands WHERE name = '{{ $json.body.brand }}' LIMIT 1;",
+                "options": {}
+            },
+            "id": "get-brand",
+            "name": "Get Brand ID",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                220,
+                0
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "59keDniQQIt0IqZL",
+                    "name": "Postgres account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "model": "gpt-4o-mini",
+                "prompt": "Generate a TikTok Ads campaign for the brand \"{{ $('Get Brand ID').first().json.name }}\" with the following requirements:\n- Objective: {{ $('Webhook').first().json.body.objective }}\n- Locations: {{ $('Webhook').first().json.body.locations }}\n- Daily Budget (MXN): {{ $('Webhook').first().json.body.daily_budget_mxn }}\n- Age Range: {{ $('Webhook').first().json.body.age_range }}\n- Gender: {{ $('Webhook').first().json.body.gender }}\n- Language: {{ $('Webhook').first().json.body.language }}\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"campaign\": {\n    \"name\": \"Campaign name here\",\n    \"objective\": \"{{ $('Webhook').first().json.body.objective }}\",\n    \"daily_budget_mxn\": {{ $('Webhook').first().json.body.daily_budget_mxn }},\n    \"locations\": \"{{ $('Webhook').first().json.body.locations.join(', ') }}\",\n    \"languages\": \"{{ $('Webhook').first().json.body.language }}\",\n    \"age_range\": \"{{ $('Webhook').first().json.body.age_range }}\",\n    \"gender\": \"{{ $('Webhook').first().json.body.gender }}\",\n    \"optimization\": \"CPC\",\n    \"bidding\": \"AUTO\"\n  },\n  \"ad_groups\": []\n}",
+                "options": {}
+            },
+            "id": "openai-generate",
+            "name": "Generate with OpenAI",
+            "type": "n8n-nodes-base.openAi",
+            "typeVersion": 1,
+            "position": [
+                440,
+                0
+            ],
+            "credentials": {
+                "openAiApi": {
+                    "id": "unvIu2ps7uFPKUXw",
+                    "name": "OpenAi account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "// DEBUGGING VERSION\nconst brandData = $('Get Brand ID').first().json;\nconst aiData = $input.all()[0].json;\n\n// 1. Extract Content\nlet content = \"\";\nif (aiData.message?.content) content = aiData.message.content;\nelse if (aiData.choices?.[0]?.message?.content) content = aiData.choices[0].message.content;\nelse if (typeof aiData === 'string') content = aiData;\n\n// 2. Clean Content\nconst cleanedContent = content.replace(/```json\\n?|```/g, '').trim();\n\n// 3. Parse JSON\nlet aiResponse = {};\ntry {\n  aiResponse = JSON.parse(cleanedContent);\n} catch (e) {\n  // If parsing fails, use fallback but LOG THE ERROR\n  aiResponse = { \n    error: \"JSON Parse Failed\", \n    raw_content: content,\n    cleaned_content: cleanedContent\n  };\n}\n\n// 4. Force values if missing (Fallback Strategy)\nif (!aiResponse.campaign) aiResponse.campaign = {};\n\n// Use input values if AI failed to return them\nconst inputBody = $('Webhook').first().json.body;\nif (!aiResponse.campaign.objective) aiResponse.campaign.objective = inputBody.objective;\nif (!aiResponse.campaign.daily_budget_mxn) aiResponse.campaign.daily_budget_mxn = inputBody.daily_budget_mxn;\n\nreturn [{\n  json: {\n    brandId: brandData.id,\n    brandName: brandData.name,\n    campaign: aiResponse.campaign,\n    adGroups: aiResponse.ad_groups || [],\n    fullResponse: aiResponse\n  }\n}];"
+            },
+            "id": "process-data",
+            "name": "Process Data",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                660,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "INSERT INTO campaigns (\n  brand_id, name, objective, daily_budget, locations, \n  languages, age_range, gender, optimization, bidding, status\n)\nVALUES (\n  {{ $json.brandId }},\n  '{{ $json.campaign.name || \"AI Generated Campaign\" }}',\n  '{{ $json.campaign.objective }}',\n  {{ $json.campaign.daily_budget_mxn }},\n  '{{ $json.campaign.locations || \"Piedras Negras, MX\" }}',\n  '{{ $json.campaign.languages || \"es,*\" }}',\n  '{{ $json.campaign.age_range || \"18-44\" }}',\n  '{{ $json.campaign.gender || \"ALL\" }}',\n  '{{ $json.campaign.optimization || \"CPC\" }}',\n  '{{ $json.campaign.bidding || \"AUTO\" }}',\n  'DRAFT'\n)\nRETURNING id;",
+                "options": {}
+            },
+            "id": "save-campaign",
+            "name": "Save Campaign",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                880,
+                0
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "59keDniQQIt0IqZL",
+                    "name": "Postgres account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "return [{\n  json: {\n    success: true,\n    message: 'TikTok Ads campaign generated and saved successfully!',\n    campaign_id: $('Save Campaign').first().json.id,\n    brand: $('Process Data').first().json.brandName,\n    campaign: $('Process Data').first().json.campaign\n  }\n}];"
+            },
+            "id": "return-result",
+            "name": "Return Result",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                0
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Get Brand ID",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Brand ID": {
+            "main": [
+                [
+                    {
+                        "node": "Generate with OpenAI",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate with OpenAI": {
+            "main": [
+                [
+                    {
+                        "node": "Process Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Process Data": {
+            "main": [
+                [
+                    {
+                        "node": "Save Campaign",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Save Campaign": {
+            "main": [
+                [
+                    {
+                        "node": "Return Result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

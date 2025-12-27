@@ -1,0 +1,48 @@
+{
+    "name": "View Campaigns",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "GET",
+                "path": "campaigns/list",
+                "options": {}
+            },
+            "id": "webhook-view",
+            "name": "Webhook - View Campaigns",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2.1,
+            "position": [
+                0,
+                0
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT \n  c.id,\n  c.name as campaign_name,\n  c.objective,\n  c.daily_budget,\n  c.locations,\n  c.status,\n  c.created_at,\n  b.name as brand_name\nFROM campaigns c\nJOIN brands b ON c.brand_id = b.id\nORDER BY c.created_at DESC\nLIMIT 10;",
+                "options": {}
+            },
+            "id": "query-campaigns",
+            "name": "Get Recent Campaigns",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 2,
+            "position": [
+                220,
+                0
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook - View Campaigns": {
+            "main": [
+                [
+                    {
+                        "node": "Get Recent Campaigns",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -10,7 +10,7 @@ cloud-sql-proxy n8n-secstore:us-central1:n8n-hgdb --port 5432
 
 ### Terminal 2: Connect to Database
 ```bash
-psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=Hgn8n0814!"
+psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=YOUR_PASSWORD"
 ```
 
 ---

@@ -66,7 +66,7 @@ Store these locally in `.env` (not in Git):
 ```bash
 # Database (Cloud SQL)
 DB_USER=n8n_user
-DB_PASSWORD=Hgn8n0814!  # Keep this private!
+DB_PASSWORD=your_secure_password_here  # Keep this private!
 
 # n8n Host
 N8N_HOST=n8ne01.entrega.space

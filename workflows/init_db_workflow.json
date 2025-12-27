@@ -1,0 +1,43 @@
+{
+  "name": "Initialize Database Schema",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d0e1a2b3-c4d5-6789-0123-456789abcdef",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        820,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS brands (\n  id SERIAL PRIMARY KEY,\n  name VARCHAR(255) NOT NULL UNIQUE,\n  handle VARCHAR(255),\n  notes TEXT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE TABLE IF NOT EXISTS campaigns (\n  id SERIAL PRIMARY KEY,\n  brand_id INTEGER NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  objective VARCHAR(50) NOT NULL,\n  daily_budget NUMERIC(10, 2) NOT NULL,\n  locations TEXT NOT NULL,\n  languages VARCHAR(50) DEFAULT 'es,*',\n  age_range VARCHAR(20) DEFAULT '18-44',\n  gender VARCHAR(20) DEFAULT 'ALL',\n  optimization VARCHAR(20) DEFAULT 'CPC',\n  bidding VARCHAR(20) DEFAULT 'AUTO',\n  start_date DATE DEFAULT CURRENT_DATE,\n  end_date DATE,\n  status VARCHAR(20) DEFAULT 'DRAFT',\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (brand_id) REFERENCES brands(id)\n);\n\nCREATE TABLE IF NOT EXISTS ad_groups (\n  id SERIAL PRIMARY KEY,\n  campaign_id INTEGER NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  interests TEXT,\n  behaviors TEXT,\n  hashtags TEXT,\n  placements VARCHAR(20) DEFAULT 'AUTO',\n  connection VARCHAR(20) DEFAULT 'ANY',\n  notes TEXT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (campaign_id) REFERENCES campaigns(id)\n);\n\nCREATE TABLE IF NOT EXISTS ads (\n  id SERIAL PRIMARY KEY,\n  ad_group_id INTEGER NOT NULL,\n  name VARCHAR(255) NOT NULL,\n  primary_text TEXT NOT NULL,\n  cta VARCHAR(50) DEFAULT 'Order Now',\n  duration_sec INTEGER DEFAULT 12,\n  music_hint TEXT,\n  asset_url TEXT,\n  status VARCHAR(20) DEFAULT 'DRAFT',\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (ad_group_id) REFERENCES ad_groups(id)\n);\n\nCREATE TABLE IF NOT EXISTS generations (\n  id SERIAL PRIMARY KEY,\n  brand_id INTEGER NOT NULL,\n  input_payload JSONB NOT NULL,\n  output_payload JSONB NOT NULL,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (brand_id) REFERENCES brands(id)\n);\n\nINSERT INTO brands (name, handle, notes) \nVALUES \n  ('Chiltepik', '@chiltepik', 'Mariscos premium, aguachiles, ceviches'),\n  ('ChocoBites', '@chocobites', 'Galletas artesanales, dulces, chewy')\nON CONFLICT (name) DO NOTHING;\n\nCREATE INDEX IF NOT EXISTS idx_campaigns_brand_id ON campaigns(brand_id);\nCREATE INDEX IF NOT EXISTS idx_ad_groups_campaign_id ON ad_groups(campaign_id);\nCREATE INDEX IF NOT EXISTS idx_ads_ad_group_id ON ads(ad_group_id);\nCREATE INDEX IF NOT EXISTS idx_generations_brand_id ON generations(brand_id);\nCREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);\nCREATE INDEX IF NOT EXISTS idx_ads_status ON ads(status);"
+      },
+      "id": "e1f2a3b4-c5d6-7890-1234-567890abcdef",
+      "name": "Run Schema SQL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        360
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Run Schema SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

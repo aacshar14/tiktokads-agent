@@ -26,7 +26,7 @@ cloud-sql-proxy n8n-secstore:us-central1:n8n-hgdb --port 5432
 Open **another new terminal** and run:
 
 ```bash
-psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=Hgn8n0814!"
+psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=YOUR_PASSWORD"
 ```
 
 You should see:
@@ -111,7 +111,7 @@ n8n:        Run workflow ✅
 ## Summary:
 
 1. ✅ Start proxy: `cloud-sql-proxy n8n-secstore:us-central1:n8n-hgdb --port 5432`
-2. ✅ Connect: `psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=Hgn8n0814!"`
+2. ✅ Connect: `psql "host=127.0.0.1 port=5432 dbname=n8n user=n8n_user password=YOUR_PASSWORD"`
 3. ✅ Paste SQL from `RUN_THIS_SQL.txt`
 4. ✅ Done! Run workflow again.
 

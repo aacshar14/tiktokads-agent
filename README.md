@@ -4,10 +4,20 @@ AI-powered TikTok Ads campaign generator built with n8n, OpenAI, and Cloud SQL.
 
 ## 🚀 Quick Start
 
-### Generate a Campaign
+### 1. Deployment
+**[👉 Follow the DEPLOYMENT GUIDE here](docs/DEPLOYMENT_GUIDE.md)** to set up on DigitalOcean + Coolify.
+
+### 2. Local Testing
+You can also run the entire stack locally with Docker:
+```bash
+docker-compose -f config/docker-compose.yml up -d
+```
+Access n8n at `http://localhost:5678`.
+
+### 3. Generate a Campaign
 
 ```bash
-curl -X POST https://n8ne01.entrega.space/webhook/ads/generate \
+curl -X POST https://n8n.yourdomain.com/webhook/ads/generate \
   -H "Content-Type: application/json" \
   -d '{
     "brand": "ChocoBites",
@@ -20,30 +30,36 @@ curl -X POST https://n8ne01.entrega.space/webhook/ads/generate \
   }'
 ```
 
-## 📁 Project Structure
+## 📂 Project Structure
 
-- **Core Files:**
-  - `tiktok_ads_master_workflow.json` - Main n8n workflow
-  - `tiktok_schema_cloudsql.sql` - Database schema
-  - `generate.json` - Input structure
-  - `OpenAI.json` - AI prompts
-
-- **Documentation:**
-  - `API_ENDPOINT_SETUP.md` - API reference
-  - `DATABASE_CONNECTION_GUIDE.md` - Database setup
-  - `SECURITY_NOTES.md` - Security best practices
-  - `docs/` - Additional guides
-
-- **Database:**
-  - `RUN_THIS_SQL.txt` - Quick schema setup
-  - `QUERY_SAVED_CAMPAIGNS.sql` - Sample queries
+```
+tiktokads-agent/
+├── workflows/                  # n8n Workflow JSON files
+│   ├── tiktok_ads_production_workflow.json  # MAIN PRODUCTION WORKFLOW
+│   ├── init_db_workflow.json                # Database initialization
+│   ├── view_campaigns_workflow.json         # Helper to view data
+│   └── archive/                             # Old versions
+├── database/                   # SQL Scripts
+│   ├── tiktok_schema_cloudsql.sql           # Main schema
+│   └── tiktok_agent_schema.sql              # Alternative schema
+├── docs/                       # Documentation
+│   ├── DEPLOYMENT_GUIDE.md                  # MAIN SETUP GUIDE
+│   ├── API_ENDPOINT_SETUP.md                # API details
+│   └── ...
+├── config/                     # Configuration files
+│   ├── docker-compose.yml
+│   └── env.example
+├── scripts/                    # Helper scripts
+│   └── connect_db.ps1
+└── README.md                   # This file
+```
 
 ## 🏗️ Architecture
 
-- **n8n** - Workflow automation on Cloud Run
+- **n8n** - Workflow automation on Cloud Run/DigitalOcean
 - **OpenAI GPT-4** - Campaign generation
-- **Cloud SQL PostgreSQL** - Data storage
-- **GCP** - Cloud infrastructure
+- **PostgreSQL** - Data storage
+- **Coolify** - Deployment management
 
 ## 📊 Database Schema
 
@@ -55,16 +71,16 @@ curl -X POST https://n8ne01.entrega.space/webhook/ads/generate \
 
 ## 🔐 Security
 
-- Use `.env` file for credentials (see `env.example`)
+- Use `.env` file for credentials (see `config/env.example`)
 - Never commit passwords to Git
-- See `SECURITY_NOTES.md` for best practices
+- See `docs/SECURITY_NOTES.md` for best practices
 
 ## 📚 Documentation
 
-- [API Documentation](API_ENDPOINT_SETUP.md)
-- [Database Setup](DATABASE_CONNECTION_GUIDE.md)
-- [Setup Guide](docs/SETUP_GUIDE.md)
-- [Success Summary](WORKFLOW_SUCCESS_SUMMARY.md)
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+- [API Documentation](docs/API_ENDPOINT_SETUP.md)
+- [Database Setup](docs/DATABASE_CONNECTION_GUIDE.md)
+- [Success Summary](docs/WORKFLOW_SUCCESS_SUMMARY.md)
 
 ## ✨ Features
 
@@ -76,7 +92,7 @@ curl -X POST https://n8ne01.entrega.space/webhook/ads/generate \
 
 ## 🎯 Usage
 
-1. Import `tiktok_ads_master_workflow.json` into n8n
+1. Import `workflows/tiktok_ads_production_workflow.json` into n8n
 2. Activate the workflow
 3. Call via webhook or manual trigger
 4. Query database for results
